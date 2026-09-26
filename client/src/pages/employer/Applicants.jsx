@@ -2,6 +2,17 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../api/axios";
 import StatusBadge from "../../components/StatusBadge";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  Users,
+  Download,
+  Mail,
+  Calendar,
+  FileText,
+  Building2,
+  CheckCircle2,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 const STATUS_OPTIONS = [
@@ -48,7 +59,7 @@ const Applicants = () => {
           app._id === appId ? { ...app, status: data.application.status } : app
         )
       );
-      toast.success(`Status updated to "${newStatus}"`);
+      toast.success(`Candidate status moved to "${newStatus}"`);
     } catch (err) {
       toast.error("Failed to update status");
     } finally {
@@ -58,7 +69,7 @@ const Applicants = () => {
 
   const handleDownloadResume = async (appId, applicantName) => {
     try {
-      toast.loading("Preparing download...", { id: `download-${appId}` });
+      toast.loading("Preparing PDF download...", { id: `download-${appId}` });
       const response = await api.get(`/applications/${appId}/resume`, {
         responseType: "blob",
       });
@@ -84,139 +95,147 @@ const Applicants = () => {
   }, {});
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="flex items-center gap-3 mb-2">
-        <Link
-          to="/employer/dashboard"
-          className="text-sm text-gray-500 hover:text-brand-600 transition-colors"
-        >
-          ← Back to Dashboard
-        </Link>
-      </div>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <Link
+        to="/employer/dashboard"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors mb-4"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to listings
+      </Link>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">{jobTitle}</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {applications.length} total applicant{applications.length !== 1 ? "s" : ""}
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          Applicants for: <span className="text-brand-600">{jobTitle}</span>
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Review candidate resumes, trigger recruitment status transitions, and send automated email updates.
         </p>
       </div>
 
-      {/* Status Summary */}
+      {/* Summary Chips */}
       {applications.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          {STATUS_OPTIONS.filter((s) => counts[s]).map((s) => (
+        <div className="flex flex-wrap gap-2.5 mb-8">
+          {STATUS_OPTIONS.map((s) => (
             <div
               key={s}
-              className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-full px-3 py-1.5 text-xs"
+              className={`glass-panel px-3.5 py-1.5 flex items-center gap-2 text-xs font-semibold ${
+                counts[s] ? "border-slate-300" : "opacity-50"
+              }`}
             >
               <StatusBadge status={s} />
-              <span className="font-medium text-gray-700 ml-1">
-                {counts[s]}
-              </span>
+              <span className="text-slate-800 font-bold ml-1">{counts[s] || 0}</span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Applicants Table */}
+      {/* Applicants List */}
       {loading ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="card animate-pulse flex gap-4">
-              <div className="w-12 h-12 bg-gray-200 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-3 bg-gray-200 rounded w-1/4" />
-              </div>
+            <div key={i} className="glass-card p-6 animate-pulse">
+              <div className="h-6 bg-slate-200 rounded w-1/3 mb-2" />
+              <div className="h-4 bg-slate-200 rounded w-1/4" />
             </div>
           ))}
         </div>
       ) : applications.length === 0 ? (
-        <div className="card text-center py-16 text-gray-400">
-          <p className="text-5xl mb-4">👥</p>
-          <p className="text-lg font-medium text-gray-600">No applicants yet</p>
-          <p className="text-sm mt-1">Share your job listing to get more applicants!</p>
+        <div className="glass-card text-center py-20 text-slate-400 max-w-md mx-auto">
+          <div className="w-16 h-16 rounded-3xl bg-brand-50 flex items-center justify-center mx-auto mb-4 text-brand-600">
+            <Users className="w-8 h-8" />
+          </div>
+          <h3 className="text-base font-bold text-slate-800">No applicants yet</h3>
+          <p className="text-xs text-slate-500 mt-1">
+            Candidates applying to this job listing will appear here in real time.
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
           {applications.map((app) => (
-            <div key={app._id} className="card">
-              <div className="flex items-start gap-4">
-                {/* Avatar */}
-                <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
-                  <span className="text-gray-600 font-semibold text-lg">
+            <motion.div
+              key={app._id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-card p-6 border border-slate-200/80 hover:border-brand-500/40"
+            >
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                {/* Candidate Info */}
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-800 to-slate-700 text-white font-bold text-lg flex items-center justify-center shadow-md">
                     {app.applicant?.name?.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-
-                {/* Applicant Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {app.applicant?.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-base">
+                      {app.applicant?.name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                      <span className="flex items-center gap-1">
+                        <Mail className="w-3.5 h-3.5 text-slate-400" />
                         {app.applicant?.email}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Applied {new Date(app.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric", month: "long", year: "numeric"
+                      </span>
+                      <span>•</span>
+                      <span>
+                        Applied{" "}
+                        {new Date(app.createdAt).toLocaleDateString("en-IN", {
+                          month: "short",
+                          day: "numeric",
                         })}
-                      </p>
+                      </span>
                     </div>
-
-                    {/* Status Badge */}
-                    <StatusBadge status={app.status} />
-                  </div>
-
-                  {/* Cover Letter Preview */}
-                  {app.coverLetter && (
-                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-xs font-medium text-gray-500 mb-1">Cover Letter</p>
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {app.coverLetter}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex flex-wrap items-center gap-3 mt-4">
-                    {/* Status Updater */}
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-gray-500 font-medium">
-                        Update Status:
-                      </label>
-                      <select
-                        value={app.status}
-                        onChange={(e) =>
-                          handleStatusChange(app._id, e.target.value)
-                        }
-                        disabled={updatingId === app._id}
-                        className="text-sm border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50"
-                      >
-                        {STATUS_OPTIONS.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                      {updatingId === app._id && (
-                        <span className="text-xs text-gray-400">Saving...</span>
-                      )}
-                    </div>
-
-                    {/* Download Resume */}
-                    <button
-                      onClick={() =>
-                        handleDownloadResume(app._id, app.applicant?.name)
-                      }
-                      className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
-                    >
-                      📄 Download Resume
-                    </button>
                   </div>
                 </div>
+
+                {/* Status Badge */}
+                <StatusBadge status={app.status} />
               </div>
-            </div>
+
+              {/* Cover Letter */}
+              {app.coverLetter && (
+                <div className="my-4 p-3.5 rounded-xl bg-slate-50/80 border border-slate-100">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Candidate Note
+                  </p>
+                  <p className="text-sm text-slate-700 leading-relaxed">
+                    {app.coverLetter}
+                  </p>
+                </div>
+              )}
+
+              {/* Action Controls */}
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+                {/* Update Dropdown */}
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                  <span>ATS Stage:</span>
+                  <select
+                    value={app.status}
+                    onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                    disabled={updatingId === app._id}
+                    className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-xs cursor-pointer disabled:opacity-50"
+                  >
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  {updatingId === app._id && (
+                    <span className="text-[10px] text-brand-600 animate-pulse">
+                      Updating...
+                    </span>
+                  )}
+                </div>
+
+                {/* Download Button */}
+                <button
+                  onClick={() => handleDownloadResume(app._id, app.applicant?.name)}
+                  className="btn-secondary text-xs !py-2 !px-4"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-500" />
+                  Download PDF Resume
+                </button>
+              </div>
+            </motion.div>
           ))}
         </div>
       )}
