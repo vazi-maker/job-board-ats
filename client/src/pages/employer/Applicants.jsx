@@ -56,8 +56,25 @@ const Applicants = () => {
     }
   };
 
-  const handleDownloadResume = (appId, applicantName) => {
-    window.open(`/api/applications/${appId}/resume`, "_blank");
+  const handleDownloadResume = async (appId, applicantName) => {
+    try {
+      toast.loading("Preparing download...", { id: `download-${appId}` });
+      const response = await api.get(`/applications/${appId}/resume`, {
+        responseType: "blob",
+      });
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      const cleanName = (applicantName || "applicant").replace(/\s+/g, "_");
+      link.setAttribute("download", `Resume-${cleanName}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success("Resume downloaded!", { id: `download-${appId}` });
+    } catch (err) {
+      toast.error("Failed to download resume", { id: `download-${appId}` });
+    }
   };
 
   // Count by status
